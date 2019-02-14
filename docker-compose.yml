@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  vdalen-telegraf:
+    image: telegraf:1.7
+    container_name: vdalen-telegraf
+    network_mode: host
+    volumes:
+      - ./telegraf:/var/lib/telegraf
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf
+  vdalen-influxdb:
+    image: influxdb:1.7
+    container_name: vdalen-influxdb
+    ports:
+      - 9083:8083
+      - 9086:8086
+      - 35826:25826/udp
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./types.db:/usr/share/collectd/types.db:ro
+  vdalen-grafana:
+    image: grafana/grafana:5.4.3
+    container_name: vdalen-grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+  vdalen-prometheus:
+    image: prom/prometheus:v2.7.1
+    container_name: vdalen-prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "-config.file=/etc/prometheus/prometheus.yml"
+      - "-storage.remote.influxdb-url=http://vdalen-influxdb:8086/"
+      - "-storage.remote.influxdb.database=prometheus"
+  vdalen-exporter:
+    image: prom/collectd-exporter
+    container_name: vdalen-exporter
+    ports:
+      - 9103:9103
+      - 25826:25826/udp
+    command:
+      - "-collectd.listen-address=:25826"

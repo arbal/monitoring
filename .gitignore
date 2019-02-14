@@ -1,0 +1,7 @@
+# project config files:
+.idea
+*.iml
+
+/grafana
+/influxdb
+/telegraf
