@@ -1,47 +1,86 @@
 version: '3'
 
+networks:
+  front-tier:
+  back-tier:
+
 services:
-  vdalen-telegraf:
-    image: telegraf:1.7
-    container_name: vdalen-telegraf
-    network_mode: host
-    volumes:
-      - ./telegraf:/var/lib/telegraf
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf
-  vdalen-influxdb:
-    image: influxdb:1.7
-    container_name: vdalen-influxdb
-    ports:
-      - 9083:8083
-      - 9086:8086
-      - 35826:25826/udp
-    volumes:
-      - ./influxdb:/var/lib/influxdb
-      - ./influxdb.conf:/etc/influxdb/influxdb.conf
-      - ./types.db:/usr/share/collectd/types.db:ro
-  vdalen-grafana:
+  grafana:
     image: grafana/grafana:5.4.3
-    container_name: vdalen-grafana
+    container_name: grafana
+    restart: unless-stopped
     ports:
       - 3000:3000
     volumes:
       - ./grafana:/var/lib/grafana
-  vdalen-prometheus:
+      - ./grafana-conf/provisioning:/etc/grafana/provisioning
+      - ./grafana-conf/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - back-tier
+      - front-tier
+
+  influxdb:
+    image: influxdb:1.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - 9083:8083
+      - 9086:8086
+      - 35826:25826/udp
+    environment:
+      INFLUXDB_REPORTING_DISABLED: "true"
+      INFLUXDB_DB: telegraf
+      INFLUXDB_USER: telegraf
+      INFLUXDB_USER_PASSWORD: telegraf
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./types.db:/usr/share/collectd/types.db:ro
+    networks:
+      - back-tier
+
+  telegraf:
+    image: telegraf:1.7
+    container_name: telegraf
+    restart: unless-stopped
+    environment:
+      INFLUXDB_URI: "http://influxdb:8086"
+      INFLUXDB_DB: telegraf
+      INFLUXDB_USER: telegraf
+      INFLUXDB_USER_PASSWORD: telegraf
+    volumes:
+      - ./telegraf:/var/lib/telegraf
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - back-tier
+
+  prometheus:
     image: prom/prometheus:v2.7.1
-    container_name: vdalen-prometheus
+    container_name: prometheus
+    restart: unless-stopped
     ports:
       - 9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
-      - "-config.file=/etc/prometheus/prometheus.yml"
-      - "-storage.remote.influxdb-url=http://vdalen-influxdb:8086/"
-      - "-storage.remote.influxdb.database=prometheus"
-  vdalen-exporter:
-    image: prom/collectd-exporter
-    container_name: vdalen-exporter
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - back-tier
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    privileged: true
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    command: 
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     ports:
-      - 9103:9103
-      - 25826:25826/udp
-    command:
-      - "-collectd.listen-address=:25826"
+      - 9100:9100
+    networks:
+      - back-tier
+    restart: always
