@@ -16,8 +16,8 @@ If not - it will still take mentioned ~ 1 minute + time needed for docker instal
 ## Configure InflixDB database
 ### Create Telegraf and Prometheus database
 ```
-curl -XPOST -G "http://localhost:9086/query?pretty=true" --data-urlencode "q=CREATE DATABASE telegraf"
-curl -XPOST -G "http://localhost:9086/query?pretty=true" --data-urlencode "q=CREATE DATABASE prometheus"
+curl -X POST -G "http://localhost:9086/query?pretty=true" --data-urlencode "q=CREATE DATABASE telegraf"
+curl -X POST -G "http://localhost:9086/query?pretty=true" --data-urlencode "q=CREATE DATABASE prometheus"
 ```
 
 ### Add retention policy (Optional)
