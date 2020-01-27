@@ -7,11 +7,20 @@ This repository contains easily deployable monitoring solution which uses:
  - Telegraf (monitoring agent)
  - InfluxDB (persistent timeseries storage)
 
-
 # How to use it?
 
 If you have docker and docker-compose installed, this will take roughly 1 minute to have it up and running.
 If not - it will still take mentioned ~ 1 minute + time needed for docker installation.
+
+# Requirements
+
+|Container           |MEM         |CPU     |Storage        |
+|--------------------|------------|--------|---------------|
+|Grafana             |255 MB      |1       |at least 100 MB|
+|Influxdb            |4   GB      |1       |at least 10  GB|
+|node-exporter       |50  MB      |1       |-              |
+|telegraf            |50  MB      |1       |-              |
+|prometheus          |150 MB      |1       |-              |
 
 ## Configure InflixDB database
 ### Create Telegraf and Prometheus database

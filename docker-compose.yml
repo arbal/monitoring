@@ -12,9 +12,9 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./grafana:/var/lib/grafana
-      - ./grafana-conf/provisioning:/etc/grafana/provisioning
-      - ./grafana-conf/dashboards:/var/lib/grafana/dashboards
+      - ./data/grafana:/var/lib/grafana
+      - ./conf/grafana/provisioning:/etc/grafana/provisioning
+      - ./conf/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - back-tier
       - front-tier
@@ -33,9 +33,9 @@ services:
       INFLUXDB_USER: telegraf
       INFLUXDB_USER_PASSWORD: telegraf
     volumes:
-      - ./influxdb:/var/lib/influxdb
-      - ./influxdb.conf:/etc/influxdb/influxdb.conf
-      - ./types.db:/usr/share/collectd/types.db:ro
+      - ./data/influxdb:/var/lib/influxdb
+      - ./conf/influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./conf/influxdb/types.db:/usr/share/collectd/types.db:ro
     networks:
       - back-tier
 
@@ -49,8 +49,8 @@ services:
       INFLUXDB_USER: telegraf
       INFLUXDB_USER_PASSWORD: telegraf
     volumes:
-      - ./telegraf:/var/lib/telegraf
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf
+      - ./data/telegraf:/var/lib/telegraf
+      - ./conf/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - back-tier
@@ -62,7 +62,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     networks:
@@ -75,7 +75,7 @@ services:
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-    command: 
+    command:
       - "--path.procfs=/host/proc"
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
